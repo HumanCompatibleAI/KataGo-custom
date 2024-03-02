@@ -16,7 +16,8 @@ PlaySettings::PlaySettings()
    allowResignation(false),resignThreshold(0.0),resignConsecTurns(1),
    forSelfPlay(false),
    handicapAsymmetricPlayoutProb(0.0),normalAsymmetricPlayoutProb(0.0),maxAsymmetricRatio(2.0),
-   recordTimePerMove(false)
+   recordTimePerMove(false),
+   hitTurnLimitIsNoResult(false)
 {}
 PlaySettings::~PlaySettings()
 {}
@@ -94,6 +95,7 @@ PlaySettings PlaySettings::loadForSelfplay(ConfigParser& cfg, bool isDistributed
   playSettings.minAsymmetricCompensateKomiProb = cfg.getDouble("minAsymmetricCompensateKomiProb",0.0,1.0);
   playSettings.sekiForkHackProb = cfg.contains("sekiForkHackProb") ? cfg.getDouble("sekiForkHackProb",0.0,1.0) : 0.0;
   playSettings.forSelfPlay = true;
+  playSettings.hitTurnLimitIsNoResult = cfg.contains("hitTurnLimitIsNoResult") ? cfg.getBool("hitTurnLimitIsNoResult") : false;
 
   if(playSettings.policySurpriseDataWeight + playSettings.valueSurpriseDataWeight > 1.0)
     throw StringError("policySurpriseDataWeight + valueSurpriseDataWeight > 1.0");
