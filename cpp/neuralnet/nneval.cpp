@@ -951,7 +951,10 @@ void NNEvaluator::evaluate(
         double shorttermWinlossErrorPreSoftplus = buf.result->shorttermWinlossError;
         double shorttermScoreErrorPreSoftplus = buf.result->shorttermScoreError;
 
-        if(history.rules.koRule != Rules::KO_SIMPLE && history.rules.scoringRule != Rules::SCORING_TERRITORY)
+        const bool shouldClearNoResult = history.rules.koRule != Rules::KO_SIMPLE
+          && history.rules.scoringRule != Rules::SCORING_TERRITORY
+          && !nnInputParams.forceAllowNoResultPredictions;
+        if(shouldClearNoResult)
           noResultLogits -= 100000.0;
 
         //Softmax
@@ -960,7 +963,7 @@ void NNEvaluator::evaluate(
         lossProb = exp(lossLogits - maxLogits);
         noResultProb = exp(noResultLogits - maxLogits);
 
-        if(history.rules.koRule != Rules::KO_SIMPLE && history.rules.scoringRule != Rules::SCORING_TERRITORY)
+        if(shouldClearNoResult)
           noResultProb = 0.0;
 
         double probSum = winProb + lossProb + noResultProb;

@@ -62,6 +62,12 @@ struct SearchParams {
   double noResultUtility; //Utility of having a no-result game, regardless of player's color.
   double drawEquivalentWinsForWhite; //Consider a draw to be this many wins and one minus this many losses.
 
+  // Typically no-result is only allowed under certain rule sets, and the
+  // no-result logit is cleared out under incompatible rule sets.
+  // If "hitTurnLimitIsNoResult" is enabled then this may no longer be true.
+  // Setting this param means that no-result logits are no longer cleared.
+  bool forceAllowNoResultPredictions;
+
   //Search tree exploration parameters
   double cpuctExploration;  //Constant factor on exploration, should also scale up linearly with magnitude of utility
   double cpuctExplorationLog; //Constant factor on log-scaling exploration, should also scale up linearly with magnitude of utility

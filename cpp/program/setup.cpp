@@ -492,6 +492,9 @@ void Setup::loadParams(
     else if(cfg.contains("cpuctUtilityStdevScale"))   params.cpuctUtilityStdevScale = cfg.getDouble("cpuctUtilityStdevScale",        0.0, 1.0);
     else if(applyDefaultParams)                       params.cpuctUtilityStdevScale = ((setupFor != SETUP_FOR_DISTRIBUTED && setupFor != SETUP_FOR_OTHER) ? 0.85 : 0.0);
 
+    if(cfg.contains("forceAllowNoResultPredictions"+idxStr)) params.forceAllowNoResultPredictions = cfg.getBool("forceAllowNoResultPredictions"+idxStr);
+    else if(cfg.contains("forceAllowNoResultPredictions"))   params.forceAllowNoResultPredictions = cfg.getBool("forceAllowNoResultPredictions");
+    else if(applyDefaultParams)                             params.forceAllowNoResultPredictions = false;
 
     if(cfg.contains("fpuReductionMax"+idxStr)) params.fpuReductionMax = cfg.getDouble("fpuReductionMax"+idxStr, 0.0, 2.0);
     else if(cfg.contains("fpuReductionMax"))   params.fpuReductionMax = cfg.getDouble("fpuReductionMax",        0.0, 2.0);
