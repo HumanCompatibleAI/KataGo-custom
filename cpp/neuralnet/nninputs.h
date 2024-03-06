@@ -52,6 +52,7 @@ struct MiscNNInputParams {
   static const Hash128 ZOBRIST_NN_POLICY_TEMP;
   static const Hash128 ZOBRIST_AVOID_MYTDAGGER_HACK;
   static const Hash128 ZOBRIST_POLICY_OPTIMISM;
+  static const Hash128 ZOBRIST_FORCE_ALLOW_NO_RESULT_PREDICTIONS;
 };
 
 namespace NNInputs {
