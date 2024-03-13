@@ -458,8 +458,8 @@ void Setup::loadParams(
     if(cfg.contains("noResultUtilityForWhite"+idxStr)) params.noResultUtilityForWhite = cfg.getDouble("noResultUtilityForWhite"+idxStr, -1.0, 1.0);
     else if(cfg.contains("noResultUtilityForWhite"))   params.noResultUtilityForWhite = cfg.getDouble("noResultUtilityForWhite",        -1.0, 1.0);
     else if(applyDefaultParams)                        params.noResultUtilityForWhite = 0.0;
-    if(cfg.contains("noResultUtility"+idxStr)) params.noResultUtility = cfg.getDouble("noResultUtility"+idxStr, -1.0, 1.0);
-    else if(cfg.contains("noResultUtility"))   params.noResultUtility = cfg.getDouble("noResultUtility",        -1.0, 1.0);
+    if(cfg.contains("noResultUtility"+idxStr)) params.noResultUtility = cfg.getDouble("noResultUtility"+idxStr, -4.0, 4.0);
+    else if(cfg.contains("noResultUtility"))   params.noResultUtility = cfg.getDouble("noResultUtility",        -4.0, 4.0);
     else if(applyDefaultParams)                params.noResultUtility = 0.0;
     if(cfg.contains("drawEquivalentWinsForWhite"+idxStr)) params.drawEquivalentWinsForWhite = cfg.getDouble("drawEquivalentWinsForWhite"+idxStr, 0.0, 1.0);
     else if(cfg.contains("drawEquivalentWinsForWhite"))   params.drawEquivalentWinsForWhite = cfg.getDouble("drawEquivalentWinsForWhite",        0.0, 1.0);
