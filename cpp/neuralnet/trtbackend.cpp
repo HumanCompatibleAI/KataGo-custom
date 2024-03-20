@@ -1398,7 +1398,7 @@ struct InputBuffers {
   InputBuffers& operator=(const InputBuffers&) = delete;
 };
 
-InputBuffers* NeuralNet::createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen) {
+InputBuffers* NeuralNet::createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen, enabled_t usingFP16Mode) {
   return new InputBuffers(loadedModel, maxBatchSize, nnXLen, nnYLen);
 }
 

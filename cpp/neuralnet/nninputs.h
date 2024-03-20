@@ -163,8 +163,11 @@ namespace SymmetryHelpers {
 
   //These two IGNORE transpose if hSize and wSize do not match. So non-square transposes are disallowed.
   //copyOutputsWithSymmetry performs the inverse of symmetry.
-  void copyInputsWithSymmetry(const float* src, float* dst, int nSize, int hSize, int wSize, int cSize, bool useNHWC, int symmetry);
-  void copyOutputsWithSymmetry(const float* src, float* dst, int nSize, int hSize, int wSize, int symmetry);
+  //The functions are templated so that different NN backends can use their preferred input/output types T.
+  template<typename T>
+  void copyInputsWithSymmetry(const float* src, T* dst, int nSize, int hSize, int wSize, int cSize, bool useNHWC, int symmetry);
+  template<typename T>
+  void copyOutputsWithSymmetry(const T* src, float* dst, int nSize, int hSize, int wSize, int symmetry);
 
   //Applies a symmetry to a location
   Loc getSymLoc(int x, int y, const Board& board, int symmetry);
@@ -239,5 +242,82 @@ namespace ScoreValue {
   //Get the standard deviation of score given the E(score) and E(score^2)
   double getScoreStdev(double scoreMeanAvg, double scoreMeanSqAvg);
 }
+
+////////////////////
+// Implementation //
+////////////////////
+
+template<typename SrcT, typename DstT>
+static void copyWithSymmetry(const SrcT* src, DstT* dst, int nSize, int hSize, int wSize, int cSize, bool useNHWC, int symmetry, bool reverse) {
+  bool transpose = (symmetry & 0x4) != 0 && hSize == wSize;
+  bool flipX = (symmetry & 0x2) != 0;
+  bool flipY = (symmetry & 0x1) != 0;
+  if(transpose && !reverse)
+    std::swap(flipX,flipY);
+  if(useNHWC) {
+    int nStride = hSize * wSize * cSize;
+    int hStride = wSize * cSize;
+    int wStride = cSize;
+    int hBaseNew = 0; int hStrideNew = hStride;
+    int wBaseNew = 0; int wStrideNew = wStride;
+
+    if(flipY) { hBaseNew = (hSize-1) * hStrideNew; hStrideNew = -hStrideNew; }
+    if(flipX) { wBaseNew = (wSize-1) * wStrideNew; wStrideNew = -wStrideNew; }
+
+    if(transpose)
+      std::swap(hStrideNew,wStrideNew);
+
+    for(int n = 0; n<nSize; n++) {
+      for(int h = 0; h<hSize; h++) {
+        int nhOld = n * nStride + h*hStride;
+        int nhNew = n * nStride + hBaseNew + h*hStrideNew;
+        for(int w = 0; w<wSize; w++) {
+          int nhwOld = nhOld + w*wStride;
+          int nhwNew = nhNew + wBaseNew + w*wStrideNew;
+          for(int c = 0; c<cSize; c++) {
+            dst[nhwNew + c] = src[nhwOld + c];
+          }
+        }
+      }
+    }
+  }
+  else {
+    int ncSize = nSize * cSize;
+    int ncStride = hSize * wSize;
+    int hStride = wSize;
+    int wStride = 1;
+    int hBaseNew = 0; int hStrideNew = hStride;
+    int wBaseNew = 0; int wStrideNew = wStride;
+
+    if(flipY) { hBaseNew = (hSize-1) * hStrideNew; hStrideNew = -hStrideNew; }
+    if(flipX) { wBaseNew = (wSize-1) * wStrideNew; wStrideNew = -wStrideNew; }
+
+    if(transpose)
+      std::swap(hStrideNew,wStrideNew);
+
+    for(int nc = 0; nc<ncSize; nc++) {
+      for(int h = 0; h<hSize; h++) {
+        int nchOld = nc * ncStride + h*hStride;
+        int nchNew = nc * ncStride + hBaseNew + h*hStrideNew;
+        for(int w = 0; w<wSize; w++) {
+          int nchwOld = nchOld + w*wStride;
+          int nchwNew = nchNew + wBaseNew + w*wStrideNew;
+          dst[nchwNew] = src[nchwOld];
+        }
+      }
+    }
+  }
+}
+
+template<typename T>
+void SymmetryHelpers::copyInputsWithSymmetry(const float* src, T* dst, int nSize, int hSize, int wSize, int cSize, bool useNHWC, int symmetry) {
+  copyWithSymmetry(src, dst, nSize, hSize, wSize, cSize, useNHWC, symmetry, false);
+}
+
+template<typename T>
+void SymmetryHelpers::copyOutputsWithSymmetry(const T* src, float* dst, int nSize, int hSize, int wSize, int symmetry) {
+  copyWithSymmetry(src, dst, nSize, hSize, wSize, 1, false, symmetry, true);
+}
+
 
 #endif  // NEURALNET_NNINPUTS_H_

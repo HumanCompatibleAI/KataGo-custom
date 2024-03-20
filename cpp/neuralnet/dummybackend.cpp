@@ -104,11 +104,12 @@ bool NeuralNet::isUsingFP16(const ComputeHandle* handle) {
 void NeuralNet::printDevices() {
 }
 
-InputBuffers* NeuralNet::createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen) {
+InputBuffers* NeuralNet::createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen, enabled_t usingFP16Mode) {
   (void)loadedModel;
   (void)maxBatchSize;
   (void)nnXLen;
   (void)nnYLen;
+  (void)usingFP16Mode;
   throw StringError("Dummy neural net backend: NeuralNet::createInputBuffers unimplemented");
 }
 

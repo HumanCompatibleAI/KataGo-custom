@@ -34,8 +34,50 @@ void logModelForwardFailure(ComputeHandle* handle, InputBuffers* inputBuffers) {
   }
 }
 
-}  // namespace
+bool getUseFP16(enabled_t useFP16Mode) {
+  return useFP16Mode == enabled_t::True;
+}
 
+// These wrappers for copying inputs and outputs are needed because the
+// underlying data types of the `torch::Tensor`s are not known until runtime.
+void copyInputsWithSymmetry(const float* src, torch::Tensor dst, int nSize, int hSize, int wSize, int cSize, bool useNHWC, int symmetry) {
+  switch (dst.scalar_type()) {
+    case torch::kFloat16:
+      // Note: this call with at::Half is significantly slower than this
+      // call with float and may make FP16 overall slower than FP32.
+      return SymmetryHelpers::copyInputsWithSymmetry(src, dst.data_ptr<at::Half>(), nSize, hSize, wSize, cSize, useNHWC, symmetry);
+    case torch::kFloat32:
+      return SymmetryHelpers::copyInputsWithSymmetry(src, dst.data_ptr<float>(), nSize, hSize, wSize, cSize, useNHWC, symmetry);
+    default:
+      ASSERT_UNREACHABLE;
+  }
+}
+
+void copyInputs(const float* src, torch::Tensor dst, int nSize) {
+  switch (dst.scalar_type()) {
+    case torch::kFloat16:
+      std::copy(src, src + nSize, dst.data_ptr<at::Half>());
+      return;
+    case torch::kFloat32:
+      std::copy(src, src + nSize, dst.data_ptr<float>());
+      return;
+    default:
+      ASSERT_UNREACHABLE;
+  }
+}
+
+void copyOutputsWithSymmetry(const torch::Tensor src, float* dst, int nSize, int hSize, int wSize, int symmetry) {
+  switch (src.scalar_type()) {
+    case torch::kFloat16:
+      return SymmetryHelpers::copyOutputsWithSymmetry(src.data_ptr<at::Half>(), dst, nSize, hSize, wSize, symmetry);
+    case torch::kFloat32:
+      return SymmetryHelpers::copyOutputsWithSymmetry(src.data_ptr<float>(), dst, nSize, hSize, wSize, symmetry);
+    default:
+      ASSERT_UNREACHABLE;
+  }
+}
+
+}  // namespace
 
 LoadedModel::LoadedModel(const std::string& filename)
   : model(torch::jit::load(filename))
@@ -94,7 +136,7 @@ ComputeContext* createComputeContext(
   if (useNHWCMode != enabled_t::False) {
     throw StringError("useNHWC is not yet implemented for PyTorch.");
   }
-  const bool useFP16 = useFP16Mode == enabled_t::True;
+  const bool useFP16 = getUseFP16(useFP16Mode);
   assert(nnXLen <= MAX_BOARD_LEN);
   assert(nnYLen <= MAX_BOARD_LEN);
 
@@ -151,18 +193,20 @@ void freeComputeHandle(ComputeHandle* gpuHandle) {
   delete gpuHandle;
 }
 
-InputBuffers::InputBuffers(int maxBatchSize)
-  : hostSpatialInputs(torch::empty({maxBatchSize, NUM_SPATIAL_FEATURES, MAX_BOARD_LEN, MAX_BOARD_LEN}))
-  , hostGlobalInputs(torch::empty({maxBatchSize, NUM_GLOBAL_FEATURES})) {
+InputBuffers::InputBuffers(int maxBatchSize, enabled_t useFP16Mode) {
+  const bool useFP16 = getUseFP16(useFP16Mode);
+  const auto dataType = useFP16 ? torch::kFloat16 : torch::kFloat32;
+  hostSpatialInputs = torch::empty({maxBatchSize, NUM_SPATIAL_FEATURES, MAX_BOARD_LEN, MAX_BOARD_LEN}, {dataType});
+  hostGlobalInputs = torch::empty({maxBatchSize, NUM_GLOBAL_FEATURES}, {dataType});
   const size_t NUM_INPUTS = 2;
   modelInputs.reserve(NUM_INPUTS);
 }
 
-InputBuffers* createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen) {
+InputBuffers* createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen, enabled_t useFP16Mode) {
   (void)loadedModel;
   (void)nnXLen;
   (void)nnYLen;
-  return new InputBuffers(maxBatchSize);
+  return new InputBuffers(maxBatchSize, useFP16Mode);
 }
 
 void freeInputBuffers(InputBuffers* inputBuffers) {
@@ -213,16 +257,15 @@ void getOutput(
   const auto& spatialInputs = inputBuffers->hostSpatialInputs;
   const auto& globalInputs = inputBuffers->hostGlobalInputs;
   for (int row = 0; row < batchSize; row++) {
-    SymmetryHelpers::copyInputsWithSymmetry(inputBufs[row]->rowSpatial, spatialInputs[row].data_ptr<float>(), 1, nnYLen, nnXLen, NUM_SPATIAL_FEATURES, INPUTS_USE_NHWC, inputBufs[row]->symmetry);
+    copyInputsWithSymmetry(inputBufs[row]->rowSpatial, spatialInputs[row], 1, nnYLen, nnXLen, NUM_SPATIAL_FEATURES, INPUTS_USE_NHWC, inputBufs[row]->symmetry);
     const float* rowGlobal = inputBufs[row]->rowGlobal;
-    std::copy(rowGlobal, rowGlobal + NUM_GLOBAL_FEATURES, globalInputs[row].data_ptr<float>());
+    copyInputs(rowGlobal, globalInputs[row], NUM_GLOBAL_FEATURES);
   }
 
-  const auto modelDataType = gpuHandle->useFP16 ? torch::kFloat16 : torch::kFloat32;
   auto& modelInputs = inputBuffers->modelInputs;
   modelInputs.clear();
-  modelInputs.emplace_back(spatialInputs.index({Slice(0, batchSize)}).to(gpuHandle->device, modelDataType));
-  modelInputs.emplace_back(globalInputs.index({Slice(0, batchSize)}).to(gpuHandle->device, modelDataType));
+  modelInputs.emplace_back(spatialInputs.index({Slice(0, batchSize)}).to(gpuHandle->device));
+  modelInputs.emplace_back(globalInputs.index({Slice(0, batchSize)}).to(gpuHandle->device));
 
   c10::IValue modelOutput;
   {
@@ -247,6 +290,7 @@ void getOutput(
       throw;
     }
   }
+
   const auto& modelOutputs = modelOutput.toTupleRef().elements();
   at::Tensor policyOutputs = modelOutputs[0].toTensor();
   const at::Tensor& valueOutputs = modelOutputs[1].toTensor().to(at::kCPU);
@@ -270,8 +314,8 @@ void getOutput(
       // final policy = policy + (policy - optimisticPolicy) * policyOptimism
       policy.add_(optimisticPolicyDiffs.index({row, Slice(0, numPolicyValues)}), policyOptimism);
     }
-    policy = policy.to(at::kCPU, torch::kFloat32).contiguous();
-    SymmetryHelpers::copyOutputsWithSymmetry(policy.data_ptr<float>(), output->policyProbs, 1, nnYLen, nnXLen, inputBufs[row]->symmetry);
+    policy = policy.to(at::kCPU).contiguous();
+    copyOutputsWithSymmetry(policy, output->policyProbs, 1, nnYLen, nnXLen, inputBufs[row]->symmetry);
     // Copy the policy output for passing as well.
     output->policyProbs[nnYLen * nnXLen] = policy[nnYLen * nnXLen].item<float>();
 
@@ -292,9 +336,9 @@ void getOutput(
 
     if (output->whiteOwnerMap != NULL) {
       if (!ownershipOutputs.defined()) {
-        ownershipOutputs = modelOutputs[4].toTensor().to(at::kCPU, torch::kFloat32);
+        ownershipOutputs = modelOutputs[4].toTensor().to(at::kCPU);
       }
-      SymmetryHelpers::copyOutputsWithSymmetry(ownershipOutputs[row].data_ptr<float>(), output->whiteOwnerMap, 1, nnYLen, nnXLen, inputBufs[row]->symmetry);
+      copyOutputsWithSymmetry(ownershipOutputs[row], output->whiteOwnerMap, 1, nnYLen, nnXLen, inputBufs[row]->symmetry);
     }
   }
 }

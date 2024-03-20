@@ -131,9 +131,9 @@ struct InputBuffers {
   torch::Tensor hostGlobalInputs;
   std::vector<torch::jit::IValue> modelInputs;
 
-  InputBuffers(int maxBatchSize);
+  InputBuffers(int maxBatchSize, enabled_t useFP16Mode);
 };
-InputBuffers* createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen);
+InputBuffers* createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen, enabled_t useFP16Mode);
 void freeInputBuffers(InputBuffers* inputBuffers);
 
 void getOutput(
