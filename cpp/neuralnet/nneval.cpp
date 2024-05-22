@@ -38,7 +38,7 @@ NNServerBuf::NNServerBuf(const NNEvaluator& nnEval, const LoadedModel* model)
 {
   int maxNumRows = nnEval.getMaxBatchSize();
   if(model != NULL)
-    inputBuffers = NeuralNet::createInputBuffers(model,maxNumRows,nnEval.getNNXLen(),nnEval.getNNYLen());
+    inputBuffers = NeuralNet::createInputBuffers(model,maxNumRows,nnEval.getNNXLen(),nnEval.getNNYLen(), nnEval.getUsingFP16Mode());
   resultBufs = new NNResultBuf*[maxNumRows];
   for(int i = 0; i < maxNumRows; i++)
     resultBufs[i] = NULL;
