@@ -458,6 +458,9 @@ void Setup::loadParams(
     if(cfg.contains("noResultUtilityForWhite"+idxStr)) params.noResultUtilityForWhite = cfg.getDouble("noResultUtilityForWhite"+idxStr, -1.0, 1.0);
     else if(cfg.contains("noResultUtilityForWhite"))   params.noResultUtilityForWhite = cfg.getDouble("noResultUtilityForWhite",        -1.0, 1.0);
     else if(applyDefaultParams)                        params.noResultUtilityForWhite = 0.0;
+    if(cfg.contains("noResultUtility"+idxStr)) params.noResultUtility = cfg.getDouble("noResultUtility"+idxStr, -4.0, 4.0);
+    else if(cfg.contains("noResultUtility"))   params.noResultUtility = cfg.getDouble("noResultUtility",        -4.0, 4.0);
+    else if(applyDefaultParams)                params.noResultUtility = 0.0;
     if(cfg.contains("drawEquivalentWinsForWhite"+idxStr)) params.drawEquivalentWinsForWhite = cfg.getDouble("drawEquivalentWinsForWhite"+idxStr, 0.0, 1.0);
     else if(cfg.contains("drawEquivalentWinsForWhite"))   params.drawEquivalentWinsForWhite = cfg.getDouble("drawEquivalentWinsForWhite",        0.0, 1.0);
     else if(applyDefaultParams)                           params.drawEquivalentWinsForWhite = 0.5;
@@ -489,6 +492,9 @@ void Setup::loadParams(
     else if(cfg.contains("cpuctUtilityStdevScale"))   params.cpuctUtilityStdevScale = cfg.getDouble("cpuctUtilityStdevScale",        0.0, 1.0);
     else if(applyDefaultParams)                       params.cpuctUtilityStdevScale = ((setupFor != SETUP_FOR_DISTRIBUTED && setupFor != SETUP_FOR_OTHER) ? 0.85 : 0.0);
 
+    if(cfg.contains("forceAllowNoResultPredictions"+idxStr)) params.forceAllowNoResultPredictions = cfg.getBool("forceAllowNoResultPredictions"+idxStr);
+    else if(cfg.contains("forceAllowNoResultPredictions"))   params.forceAllowNoResultPredictions = cfg.getBool("forceAllowNoResultPredictions");
+    else if(applyDefaultParams)                             params.forceAllowNoResultPredictions = false;
 
     if(cfg.contains("fpuReductionMax"+idxStr)) params.fpuReductionMax = cfg.getDouble("fpuReductionMax"+idxStr, 0.0, 2.0);
     else if(cfg.contains("fpuReductionMax"))   params.fpuReductionMax = cfg.getDouble("fpuReductionMax",        0.0, 2.0);

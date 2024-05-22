@@ -1645,7 +1645,7 @@ FinishedGameData* Play::runGame(
     gameData->finalOwnership = new Color[Board::MAX_ARR_SIZE];
     gameData->finalSekiAreas = new bool[Board::MAX_ARR_SIZE];
 
-    if(hist.isGameFinished && hist.isNoResult) {
+    if((hist.isGameFinished && hist.isNoResult) || (playSettings.hitTurnLimitIsNoResult && gameData->hitTurnLimit)) {
       finalValueTargets.win = 0.0f;
       finalValueTargets.loss = 0.0f;
       finalValueTargets.noResult = 1.0f;

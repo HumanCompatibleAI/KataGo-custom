@@ -222,14 +222,16 @@ std::shared_ptr<NNOutput>* Search::maybeAddPolicyNoiseAndTemp(SearchThread& thre
 double Search::getResultUtility(double winLossValue, double noResultValue) const {
   return (
     winLossValue * searchParams.winLossUtilityFactor +
-    noResultValue * searchParams.noResultUtilityForWhite
+    noResultValue * searchParams.noResultUtilityForWhite +
+    noResultValue * searchParams.noResultUtility * (rootPla == P_WHITE ? 1 : -1)
   );
 }
 
 double Search::getResultUtilityFromNN(const NNOutput& nnOutput) const {
   return (
     (nnOutput.whiteWinProb - nnOutput.whiteLossProb) * searchParams.winLossUtilityFactor +
-    nnOutput.whiteNoResultProb * searchParams.noResultUtilityForWhite
+    nnOutput.whiteNoResultProb * searchParams.noResultUtilityForWhite +
+    nnOutput.whiteNoResultProb * searchParams.noResultUtility * (rootPla == P_WHITE ? 1 : -1)
   );
 }
 
