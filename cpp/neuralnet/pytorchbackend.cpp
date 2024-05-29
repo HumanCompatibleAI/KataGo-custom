@@ -182,8 +182,8 @@ void getOutput(
   const int nnXLen = gpuHandle->nnXLen;
   const int nnYLen = gpuHandle->nnYLen;
   if (nnXLen != MAX_BOARD_LEN || nnYLen != MAX_BOARD_LEN) {
-    // The PyTorch model assumes that smaller board sizes are
-    // input as following example channel 0 spatial input (signifying which
+    // The PyTorch model assumes that smaller board sizes' inputs are formatted
+    // like in the following example channel-0 spatial input (signifying which
     // locations are on the board) for a 5x5 input:
     //   1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     //   1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -195,7 +195,7 @@ void getOutput(
     //   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     //
     // If nnXLen and nnYLen are set to 5 instead of MAX_BOARD_LEN==19,
-    // the inputs get populated instead as
+    // KataGo populates the inputs as
     //   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
     //   1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0
     //   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -203,9 +203,10 @@ void getOutput(
     //   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     //
     // The other backends handle this but I (tomtseng) haven't investigated how.
-    // For now we'll just enforce that nnXLen and nnYLen are MAX_BOARD_LEN. If a
-    // user wants to play on a 5x5 board, they should include MAX_BOARD_LEN==19
-    // in the bSizes config parameter, otherwise we throw an exception here.
+    // For now we'll just enforce that nnXLen and nnYLen are 19. If a user wants
+    // to play on a 5x5 board, they should include 19 in the bSizes config
+    // parameter (and set its bSizeRelProbs to 0 if they don't actually want any
+    // 19x19 games), otherwise we throw an exception here.
     throw StringError(Global::strprintf("Board len not yet supported: %d x %d", nnXLen, nnYLen));
   }
   constexpr bool INPUTS_USE_NHWC = false;
