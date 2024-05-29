@@ -42,8 +42,12 @@ LoadedModel::LoadedModel(const std::string& filename)
   , modelName(filename) {}
 
 LoadedModel::LoadedModel(const LoadedModel& other)
-  : model(other.model.clone())
-  , modelName(other.modelName) {}
+  : modelName(other.modelName) {
+  {
+    const std::lock_guard<std::mutex> guard(other.cloneMutex);
+    model = other.model.clone();
+  }
+}
 
 LoadedModel* loadModelFile(const std::string& file, const std::string& expectedSha256) {
   if (expectedSha256.size() != 0) {
