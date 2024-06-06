@@ -1804,6 +1804,7 @@ int MainCmds::gtp(const vector<string>& args) {
     forcedKomi = cfg.getFloat("ignoreGTPAndForceKomi", Rules::MIN_USER_KOMI, Rules::MAX_USER_KOMI);
     initialRules.komi = forcedKomi;
   }
+  const bool ignoreRuleChanges = cfg.contains("ignoreGTPRuleChanges") && cfg.getBool("ignoreGTPRuleChanges");
 
   vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_GTP);
   assert(!paramss.empty());
@@ -2175,15 +2176,20 @@ int MainCmds::gtp(const vector<string>& args) {
         response = "Unknown rules '" + rest + "', " + err.what();
       }
       if(parseSuccess) {
-        string error;
-        bool suc = engine->setRulesNotIncludingKomi(newRules,error);
-        if(!suc) {
-          responseIsError = true;
-          response = error;
+        if(ignoreRuleChanges) {
+          logger.write("Ignoring rule change to " + newRules.toStringNoKomiMaybeNice() +
+              ", preserving rules " + engine->getCurrentRules().toStringNoKomiMaybeNice());
+        } else {
+          string error;
+          bool suc = engine->setRulesNotIncludingKomi(newRules,error);
+          if(!suc) {
+            responseIsError = true;
+            response = error;
+          }
+          logger.write("Changed rules to " + newRules.toStringNoKomiMaybeNice());
+          if(!logger.isLoggingToStderr())
+            cerr << "Changed rules to " + newRules.toStringNoKomiMaybeNice() << endl;
         }
-        logger.write("Changed rules to " + newRules.toStringNoKomiMaybeNice());
-        if(!logger.isLoggingToStderr())
-          cerr << "Changed rules to " + newRules.toStringNoKomiMaybeNice() << endl;
       }
     }
 
@@ -2205,15 +2211,20 @@ int MainCmds::gtp(const vector<string>& args) {
           response = err.what();
         }
         if(parseSuccess) {
-          string error;
-          bool suc = engine->setRulesNotIncludingKomi(newRules,error);
-          if(!suc) {
-            responseIsError = true;
-            response = error;
+          if(ignoreRuleChanges) {
+            logger.write("Ignoring rule change to " + newRules.toStringNoKomiMaybeNice() +
+                ", preserving rules " + engine->getCurrentRules().toStringNoKomiMaybeNice());
+          } else {
+            string error;
+            bool suc = engine->setRulesNotIncludingKomi(newRules,error);
+            if(!suc) {
+              responseIsError = true;
+              response = error;
+            }
+            logger.write("Changed rules to " + newRules.toStringNoKomiMaybeNice());
+            if(!logger.isLoggingToStderr())
+              cerr << "Changed rules to " + newRules.toStringNoKomiMaybeNice() << endl;
           }
-          logger.write("Changed rules to " + newRules.toStringNoKomiMaybeNice());
-          if(!logger.isLoggingToStderr())
-            cerr << "Changed rules to " + newRules.toStringNoKomiMaybeNice() << endl;
         }
       }
     }
@@ -2249,15 +2260,20 @@ int MainCmds::gtp(const vector<string>& args) {
         }
       }
       if(parseSuccess) {
-        string error;
-        bool suc = engine->setRulesNotIncludingKomi(newRules,error);
-        if(!suc) {
-          responseIsError = true;
-          response = error;
+        if(ignoreRuleChanges) {
+          logger.write("Ignoring rule change to " + newRules.toStringNoKomiMaybeNice() +
+              ", preserving rules " + engine->getCurrentRules().toStringNoKomiMaybeNice());
+        } else {
+          string error;
+          bool suc = engine->setRulesNotIncludingKomi(newRules,error);
+          if(!suc) {
+            responseIsError = true;
+            response = error;
+          }
+          logger.write("Changed rules to " + newRules.toStringNoKomiMaybeNice());
+          if(!logger.isLoggingToStderr())
+            cerr << "Changed rules to " + newRules.toStringNoKomiMaybeNice() << endl;
         }
-        logger.write("Changed rules to " + newRules.toStringNoKomiMaybeNice());
-        if(!logger.isLoggingToStderr())
-          cerr << "Changed rules to " + newRules.toStringNoKomiMaybeNice() << endl;
       }
     }
 
@@ -3010,11 +3026,17 @@ int MainCmds::gtp(const vector<string>& args) {
               Rules currentRules = engine->getCurrentRules();
               currentRules.komi = sgfRules.komi;
               if(sgfRules != currentRules) {
-                ostringstream out;
-                out << "Changing rules to " << sgfRules.toJsonStringNoKomi();
-                logger.write(out.str());
-                if(!logger.isLoggingToStderr())
-                  cerr << out.str() << endl;
+                if(ignoreRuleChanges) {
+                  logger.write("Ignoring rule change to " + sgfRules.toStringNoKomiMaybeNice() +
+                      ", preserving rules " + currentRules.toStringNoKomiMaybeNice());
+                  sgfRules = currentRules;
+                } else {
+                  ostringstream out;
+                  out << "Changing rules to " << sgfRules.toJsonStringNoKomi();
+                  logger.write(out.str());
+                  if(!logger.isLoggingToStderr())
+                    cerr << out.str() << endl;
+                }
               }
             }
 

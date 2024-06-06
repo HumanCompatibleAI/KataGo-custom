@@ -2,6 +2,7 @@
 #ifndef NEURALNET_PYTORCHBACKEND_H_
 #define NEURALNET_PYTORCHBACKEND_H_
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -67,6 +68,12 @@ namespace TorchNeuralNet {
 struct LoadedModel {
   torch::jit::script::Module model;
   std::string modelName;
+  // If numNNServerThreads > 1, then multiple threads concurrently invoke
+  // LoadedModel's copy constructor. But cloning a torch::jit::script::Module
+  // appears to not be thread-safe, giving errors like "method
+  // '__torch__.torch.nn.modules.linear.___torch_mangle_5.Linear.forward'
+  // already defined."
+  mutable std::mutex cloneMutex;
 
   LoadedModel(const std::string& filename);
   LoadedModel(const LoadedModel& other);
