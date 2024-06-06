@@ -375,7 +375,7 @@ int MainCmds::selfplay(const vector<string>& args, const bool victimplay) {
 
     tdataWriter->forVictimplay = victimplay;
     tdataWriter->allowSelfplayInVictimplay = selfplayProportion > 0.0;
-    tdataWriter->useAuxPolicyTarget = cfg.getBool("useAuxPolicyTarget");
+    tdataWriter->useAuxPolicyTarget = cfg.contains("useAuxPolicyTarget") ? cfg.getBool("useAuxPolicyTarget") : true;
 
     ofstream* sgfOut = NULL;
     if(sgfOutputDir.length() > 0) {
