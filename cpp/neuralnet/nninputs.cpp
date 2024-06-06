@@ -51,6 +51,8 @@ const Hash128 MiscNNInputParams::ZOBRIST_AVOID_MYTDAGGER_HACK =
   Hash128(0x612d22ec402ce054ULL, 0x0db915c49de527aeULL);
 const Hash128 MiscNNInputParams::ZOBRIST_POLICY_OPTIMISM =
   Hash128(0x88415c85c2801955ULL, 0x39bdf76b2aaa5eb1ULL);
+const Hash128 MiscNNInputParams::ZOBRIST_FORCE_ALLOW_NO_RESULT_PREDICTIONS =
+  Hash128(0x6b1bb6886e68e68aULL, 0xc647feb1fb8ceca2ULL);
 
 //-----------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
@@ -945,6 +947,9 @@ Hash128 NNInputs::getHash(
     hash.hash0 = Hash::rrmxmx(Hash::splitMix64(hash.hash0) + (uint64_t)policyOptimismDiscretized);
     hash.hash1 = Hash::rrmxmx(hash.hash1 + hash.hash0 + (uint64_t)policyOptimismDiscretized);
   }
+
+  if(nnInputParams.forceAllowNoResultPredictions)
+    hash ^= MiscNNInputParams::ZOBRIST_FORCE_ALLOW_NO_RESULT_PREDICTIONS;
 
   return hash;
 }

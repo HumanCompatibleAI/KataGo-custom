@@ -19,6 +19,7 @@ void Search::computeRootNNEvaluation(NNResultBuf& nnResultBuf, bool includeOwner
   nnInputParams.nnPolicyTemperature = searchParams.nnPolicyTemperature;
   nnInputParams.avoidMYTDaggerHack = searchParams.avoidMYTDaggerHackPla == pla;
   nnInputParams.policyOptimism = searchParams.rootPolicyOptimism;
+  nnInputParams.forceAllowNoResultPredictions = searchParams.forceAllowNoResultPredictions;
   if(searchParams.playoutDoublingAdvantage != 0) {
     Player playoutDoublingAdvantagePla = getPlayoutDoublingAdvantagePla();
     nnInputParams.playoutDoublingAdvantage = (
@@ -56,6 +57,7 @@ bool Search::initNodeNNOutput(
   nnInputParams.nnPolicyTemperature = searchParams.nnPolicyTemperature;
   nnInputParams.avoidMYTDaggerHack = searchParams.avoidMYTDaggerHackPla == thread.pla;
   nnInputParams.policyOptimism = isRoot ? searchParams.rootPolicyOptimism : searchParams.policyOptimism;
+  nnInputParams.forceAllowNoResultPredictions = searchParams.forceAllowNoResultPredictions;
   if(searchParams.playoutDoublingAdvantage != 0) {
     Player playoutDoublingAdvantagePla = getPlayoutDoublingAdvantagePla();
     nnInputParams.playoutDoublingAdvantage = (

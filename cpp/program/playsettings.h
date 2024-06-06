@@ -83,6 +83,12 @@ struct PlaySettings {
   //Record time taken per move
   bool recordTimePerMove;
 
+  // Consider hitting the turn limit to be a no-result game when populating
+  // value targets for NN training. (In particular, this does not make MCTS
+  // mark hit-turn-limit games as terminal nodes with no result. MCTS does not know
+  // the turn limit and therefore cannot mark hit-turn-limit games as terminal.)
+  bool hitTurnLimitIsNoResult;
+
   PlaySettings();
   ~PlaySettings();
 
