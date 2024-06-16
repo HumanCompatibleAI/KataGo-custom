@@ -9,6 +9,9 @@ import json
 import datetime
 import struct
 
+# Stop TF from claiming any GPU memory:
+# https://datascience.stackexchange.com/a/58846
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow as tf
 import numpy as np
 
