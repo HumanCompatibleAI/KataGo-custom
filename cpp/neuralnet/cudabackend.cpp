@@ -2488,11 +2488,11 @@ struct InputBuffers {
 
 };
 
-InputBuffers* NeuralNet::createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen) {
+InputBuffers* NeuralNet::createInputBuffers(const LoadedModel* loadedModel, int maxBatchSize, int nnXLen, int nnYLen, enabled_t usingFP16Mode) {
   std::unique_ptr<TorchNeuralNet::InputBuffers> torchBuffers;
   if (loadedModel->torchModel != nullptr) {
     torchBuffers = std::unique_ptr<TorchNeuralNet::InputBuffers>(
-        TorchNeuralNet::createInputBuffers(loadedModel->torchModel.get(), maxBatchSize, nnXLen, nnYLen)
+        TorchNeuralNet::createInputBuffers(loadedModel->torchModel.get(), maxBatchSize, nnXLen, nnYLen, usingFP16Mode)
     );
     if (loadedModel->modelDesc.name.empty()) {
       return new InputBuffers(std::move(torchBuffers));
