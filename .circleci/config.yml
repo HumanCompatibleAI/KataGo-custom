@@ -22,7 +22,7 @@ executors:
     <<: *defaults
     docker:
       - image: humancompatibleai/goattack:cpp-build-deps
-    resource_class: alignmentresearch/far-gpu-4cpu-16g
+    resource_class: alignmentresearch/far-gpu-14cpu-60g
   python:
     <<: *defaults
     docker:
