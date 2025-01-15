@@ -252,9 +252,10 @@ void getOutput(
     //
     // The other backends handle this but I (tomtseng) haven't investigated how.
     // For now we'll just enforce that nnXLen and nnYLen are 19. If a user wants
-    // to play on a 5x5 board, they should include 19 in the bSizes config
-    // parameter (and set its bSizeRelProbs to 0 if they don't actually want any
-    // 19x19 games), otherwise we throw an exception here.
+    // to run `match` or training on smaller boards, they should still include
+    // 19 in the bSizes config parameter (and set its bSizeRelProbs to 0 if they
+    // don't actually want any 19x19 games). For GTP the user should set
+    // gtpForceMaxNNSize to true. Otherwise they'll see this exception.
     throw StringError(Global::strprintf("Board len not yet supported: %d x %d", nnXLen, nnYLen));
   }
   constexpr bool INPUTS_USE_NHWC = false;

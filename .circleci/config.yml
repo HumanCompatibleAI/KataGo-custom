@@ -19,8 +19,10 @@ executors:
     environment:
       NUM_CPUS: 8
   cpp-gpu:
-    machine: true
-    resource_class: alignmentresearch/go-attack-linux-gpu
+    <<: *defaults
+    docker:
+      - image: humancompatibleai/goattack:cpp-build-deps
+    resource_class: alignmentresearch/far-gpu-14cpu-60g
   python:
     <<: *defaults
     docker:
